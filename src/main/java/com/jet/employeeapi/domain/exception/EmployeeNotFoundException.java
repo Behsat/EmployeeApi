@@ -1,9 +1,11 @@
 package com.jet.employeeapi.domain.exception;
 
+import java.util.UUID;
+
 public class EmployeeNotFoundException extends RuntimeException {
 
-    public EmployeeNotFoundException(Long id) {
-        super("Could not find employee " + id);
+    public EmployeeNotFoundException(UUID uuid) {
+        super("Could not find employee " + uuid.toString());
     }
 
 }

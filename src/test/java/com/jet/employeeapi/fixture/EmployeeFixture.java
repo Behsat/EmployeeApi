@@ -12,19 +12,18 @@ import java.util.UUID;
 
 public interface EmployeeFixture {
 
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
     @SneakyThrows
     static Employee getEmployee(
-            Long id,
             String email,
             String fullName,
             UUID uuid,
             String birthDate,
             List<String> hobbies
     ) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date date = formatter.parse(birthDate);
         return Employee.builder()
-                .id(id)
                 .uuid(uuid)
                 .email(email)
                 .fullName(fullName)
@@ -35,17 +34,14 @@ public interface EmployeeFixture {
 
     @SneakyThrows
     static EmployeeResponse getEmployeeResponse(
-            Long id,
             String email,
             String fullName,
             UUID uuid,
             String birthDate,
             List<String> hobbies
     ) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date date = formatter.parse(birthDate);
         return EmployeeResponse.builder()
-                .id(id)
                 .uuid(uuid)
                 .email(email)
                 .fullName(fullName)
@@ -61,7 +57,6 @@ public interface EmployeeFixture {
             String birthDate,
             List<String> hobbies
     ) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date date = formatter.parse(birthDate);
         return EmployeeRequest.builder()
                 .email(email)

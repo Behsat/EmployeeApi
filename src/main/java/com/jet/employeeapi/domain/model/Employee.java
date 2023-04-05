@@ -20,12 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Employee {
 
-    @Transient
-    public static final String SEQUENCE_NAME = "employee_sequence";
-
     @Id
-    private Long id;
-
     @Builder.Default
     private UUID uuid = UUID.randomUUID();
 

@@ -14,7 +14,6 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 public class EmployeeResponse {
 
-    private Long id;
     private UUID uuid;
     private String email;
     private String fullName;

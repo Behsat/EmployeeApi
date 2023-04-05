@@ -3,6 +3,7 @@ package com.jet.employeeapi.api.resource;
 import com.jet.employeeapi.domain.model.EmployeeRequest;
 import com.jet.employeeapi.domain.model.EmployeeResponse;
 import com.jet.employeeapi.domain.service.EmployeeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,14 +31,14 @@ public class EmployeeController {
         return service.createEmployee(employee);
     }
 
-    @PutMapping("/employee/{id}")
-    public EmployeeResponse updateEmployee(@RequestBody EmployeeRequest employee, @PathVariable Long id) {
-        return service.updateEmployee(employee, id);
+    @PutMapping("/employee/{uuid}")
+    public EmployeeResponse updateEmployee(@RequestBody EmployeeRequest employee, @PathVariable UUID uuid) {
+        return service.updateEmployee(employee, uuid);
     }
 
-    @DeleteMapping("/employee/{id}")
-    public void deleteEmployee(@PathVariable Long id) {
-        service.deleteEmployee(id);
+    @DeleteMapping("/employee/{uuid}")
+    public void deleteEmployee(@PathVariable  UUID uuid) {
+        service.deleteEmployee(uuid);
     }
 
 }

@@ -14,7 +14,7 @@ public interface EmployeeService {
 
     EmployeeResponse getEmployeeByUuid(UUID uuid);
 
-    EmployeeResponse updateEmployee(EmployeeRequest request, Long id);
+    EmployeeResponse updateEmployee(EmployeeRequest request, UUID uuid);
 
-    void deleteEmployee(Long id);
+    void deleteEmployee(UUID uuid);
 }

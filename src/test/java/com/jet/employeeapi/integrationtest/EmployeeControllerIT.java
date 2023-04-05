@@ -4,7 +4,6 @@ import com.jet.employeeapi.EmployeeApiApplication;
 import com.jet.employeeapi.domain.model.EmployeeRequest;
 import com.jet.employeeapi.domain.repository.EmployeeRepository;
 import com.jet.employeeapi.domain.service.EmployeeService;
-import com.jet.employeeapi.domain.service.SequenceGeneratorService;
 import com.jet.employeeapi.fixture.EmployeeFixture;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +28,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 
 
 @ExtendWith(SpringExtension.class)
@@ -47,9 +45,6 @@ public class EmployeeControllerIT implements EmployeeFixture {
     private EmployeeService employeeService;
 
     @SpyBean
-    private SequenceGeneratorService generatorService;
-
-    @SpyBean
     private EmployeeRepository employeeRepository;
 
     @BeforeEach
@@ -57,16 +52,17 @@ public class EmployeeControllerIT implements EmployeeFixture {
         headers.add("Authorization", "Basic dXNlcjpwYXNzd29yZA==");
     }
 
+    private static final UUID UUID_EMPLOYEE = UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9");
+    private static final UUID UUID_EMPLOYEE_2 = UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f8");
+
     @SneakyThrows
     @Test
     public void shouldReturnAllEmployees() {
-        var employee = EmployeeFixture.getEmployeeResponse(
-                1L, "test@gmail.com", "Just Eat",
-                UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9"), "1989-06-18", List.of("soccer", "music"));
+        var employee = EmployeeFixture.getEmployeeResponse("test@gmail.com", "Just Eat",
+                UUID_EMPLOYEE, "1989-06-18", List.of("soccer", "music"));
 
-        var employee2 = EmployeeFixture.getEmployeeResponse(
-                2L, "test2@gmail.com", "Just Eat2",
-                UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f8"), "1998-26-11", List.of("soccer", "music"));
+        var employee2 = EmployeeFixture.getEmployeeResponse("test2@gmail.com", "Just Eat2",
+                UUID_EMPLOYEE_2, "1998-26-11", List.of("soccer", "music"));
 
         doReturn(List.of(employee, employee2)).when(employeeService).getEmployees();
 
@@ -78,7 +74,6 @@ public class EmployeeControllerIT implements EmployeeFixture {
 
         String expected = "[\n" +
                 "  {\n" +
-                "    \"id\": 1,\n" +
                 "    \"uuid\": \"387b3292-f310-4b00-8e33-9ca96c6834f9\",\n" +
                 "    \"email\": \"test@gmail.com\",\n" +
                 "    \"fullName\": \"Just Eat\",\n" +
@@ -89,7 +84,6 @@ public class EmployeeControllerIT implements EmployeeFixture {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
-                "    \"id\": 2,\n" +
                 "    \"uuid\": \"387b3292-f310-4b00-8e33-9ca96c6834f8\",\n" +
                 "    \"email\": \"test2@gmail.com\",\n" +
                 "    \"fullName\": \"Just Eat2\",\n" +
@@ -107,20 +101,18 @@ public class EmployeeControllerIT implements EmployeeFixture {
     @SneakyThrows
     @Test
     public void shouldReturnEmployeeByUuid() {
-        var employee = EmployeeFixture.getEmployeeResponse(
-                1L, "test@gmail.com", "Just Eat",
-                UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9"), "1989-06-18", List.of("soccer", "music"));
+        var employee = EmployeeFixture.getEmployeeResponse("test@gmail.com", "Just Eat",
+                UUID_EMPLOYEE, "1989-06-18", List.of("soccer", "music"));
 
-        doReturn(employee).when(employeeService).getEmployeeByUuid(UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9"));
+        doReturn(employee).when(employeeService).getEmployeeByUuid(UUID_EMPLOYEE);
 
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/api/v1/employee/387b3292-f310-4b00-8e33-9ca96c6834f9"),
+                createURLWithPort("/api/v1/employee/" + UUID_EMPLOYEE),
                 HttpMethod.GET, entity, String.class);
 
         String expected = "  {\n" +
-                "    \"id\": 1,\n" +
                 "    \"uuid\": \"387b3292-f310-4b00-8e33-9ca96c6834f9\",\n" +
                 "    \"email\": \"test@gmail.com\",\n" +
                 "    \"fullName\": \"Just Eat\",\n" +
@@ -138,8 +130,7 @@ public class EmployeeControllerIT implements EmployeeFixture {
     public void shouldCreateEmployee() {
         var employeeRequest = EmployeeFixture.getEmployeeRequest("test@gmail.com", "Just Eat", "1989-06-18", List.of("soccer", "music"));
 
-        when(generatorService.generateSequence("employee_sequence")).thenReturn(1L);
-        doReturn(null).when(employeeRepository).findByEmail(employeeRequest.getEmail());
+        doReturn(Optional.empty()).when(employeeRepository).findByEmail(employeeRequest.getEmail());
 
         HttpEntity<EmployeeRequest> entity = new HttpEntity<>(employeeRequest, headers);
 
@@ -157,15 +148,15 @@ public class EmployeeControllerIT implements EmployeeFixture {
     @Test
     public void shouldUpdateEmployee() {
         var employeeRequest = EmployeeFixture.getEmployeeRequest("test124@gmail.com", "Just dont Eat", "1989-06-13", List.of("baseball", "music"));
-        var employee = EmployeeFixture.getEmployee(145L, "test124@gmail.com", "Just Eat",
-                UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9"), "1989-26-09", List.of("soccer", "music"));
-        when(generatorService.generateSequence("employee_sequence")).thenReturn(145L);
-        doReturn(Optional.of(employee)).when(employeeRepository).findById(145L);
+        var employee = EmployeeFixture.getEmployee("test124@gmail.com", "Just Eat",
+                UUID_EMPLOYEE, "1989-26-09", List.of("soccer", "music"));
+
+        doReturn(Optional.of(employee)).when(employeeRepository).findByUuid(UUID_EMPLOYEE);
 
         HttpEntity<EmployeeRequest> entity = new HttpEntity<>(employeeRequest, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/api/v1/employee/145"),
+                createURLWithPort("/api/v1/employee/" + UUID_EMPLOYEE),
                 HttpMethod.PUT, entity, String.class);
 
         assertTrue(Objects.requireNonNull(response.getBody()).contains("test124@gmail.com"));
@@ -176,17 +167,16 @@ public class EmployeeControllerIT implements EmployeeFixture {
 
     @Test
     public void shouldDeleteEmployee() {
-        var employee = EmployeeFixture.getEmployee(
-                1L, "test@gmail.com", "Just Eat",
-                UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9"), "1989-06-18", List.of("soccer", "music"));
+        var employee = EmployeeFixture.getEmployee("test@gmail.com", "Just Eat",
+                UUID_EMPLOYEE, "1989-06-18", List.of("soccer", "music"));
 
-        doReturn(Optional.of(employee)).when(employeeRepository).findById(1L);
+        doReturn(Optional.of(employee)).when(employeeRepository).findByUuid(UUID_EMPLOYEE);
 
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         restTemplate.exchange(createURLWithPort("/api/v1/employee/1"), HttpMethod.DELETE, entity, String.class);
 
-        doReturn(Optional.empty()).when(employeeRepository).findById(1L);
-        var response = employeeRepository.findById(1L);
+        doReturn(Optional.empty()).when(employeeRepository).findByUuid(UUID_EMPLOYEE);
+        var response = employeeRepository.findByUuid(UUID_EMPLOYEE);
 
         assertEquals(response, Optional.empty());
     }

@@ -62,6 +62,6 @@ Add Authorization parameter to the endpoints.
 - Request Header Parameter Name: **Authorization**
 - Request Header Parameter Value: **Basic dXNlcjpwYXNzd29yZA==**
 
-[Docker-File]: src/main/resources/docker-compose.yml
+[Docker-File]: docker-compose.yml
 [Swagger-UI]: http://localhost:8080/swagger-ui/index.html
 [Postman-Collection]: src/main/resources/JETCodingChallange.postman_collection.json

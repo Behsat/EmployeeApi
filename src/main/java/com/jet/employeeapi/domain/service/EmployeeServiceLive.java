@@ -13,6 +13,7 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 public class EmployeeServiceLive implements EmployeeService {
 
     private final EmployeeRepository repository;
-    private final SequenceGeneratorService sequenceGeneratorService;
     private final KafkaProducerService producerService;
     private final EmployeeMapper mapper;
 
@@ -31,7 +31,6 @@ public class EmployeeServiceLive implements EmployeeService {
             throw new EmployeeEmailExistsException(request.getEmail());
         }
         var employee = mapper.fromEmployeeRequestToEmployee(request);
-        employee.setId(sequenceGeneratorService.generateSequence(Employee.SEQUENCE_NAME));
         var response = mapper.fromEmployeeToEmployeeResponse(repository.save(employee));
 
         producerService.sendMessage(String.format("Employee with %s created", response.getEmail()));
@@ -50,14 +49,14 @@ public class EmployeeServiceLive implements EmployeeService {
     public EmployeeResponse getEmployeeByUuid(UUID uuid) {
         var mapper = Mappers.getMapper(EmployeeMapper.class);
         var employee = repository.findByUuid(uuid);
-        return mapper.fromEmployeeToEmployeeResponse(employee);
+        return mapper.fromEmployeeToEmployeeResponse(employee.get());
     }
 
     @Override
-    public EmployeeResponse updateEmployee(EmployeeRequest request, Long id) {
+    public EmployeeResponse updateEmployee(EmployeeRequest request, UUID uuid) {
         var mapper = Mappers.getMapper(EmployeeMapper.class);
 
-        return repository.findById(id)
+        return repository.findByUuid(uuid)
                 .map(employee -> {
                     if (!employee.getEmail().equals(request.getEmail()) && checkEmailExists(request.getEmail())) {
                         throw new EmployeeEmailExistsException(request.getEmail());
@@ -70,20 +69,20 @@ public class EmployeeServiceLive implements EmployeeService {
                     producerService.sendMessage(String.format("Employee with %s updated", response.getEmail()));
                     return response;
                 })
-                .orElseThrow(() -> new EmployeeNotFoundException(id));
+                .orElseThrow(() -> new EmployeeNotFoundException(uuid));
     }
 
     @Override
-    public void deleteEmployee(Long id) {
-        var maybeEmployee = repository.findById(id);
+    public void deleteEmployee(UUID uuid) {
+        var maybeEmployee = repository.findByUuid(uuid);
 
         maybeEmployee.ifPresent(employee -> {
-            repository.deleteById(id);
-            producerService.sendMessage(String.format("Employee with %s deleted", id));
+            repository.deleteByUuid(uuid);
+            producerService.sendMessage(String.format("Employee with %s deleted", uuid));
         });
     }
 
     private boolean checkEmailExists(String email) {
-        return repository.findByEmail(email) != null;
+        return repository.findByEmail(email).isPresent();
     }
 }
