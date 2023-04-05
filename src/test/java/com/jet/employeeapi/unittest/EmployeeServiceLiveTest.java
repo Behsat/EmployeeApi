@@ -6,7 +6,7 @@ import com.jet.employeeapi.domain.exception.EmployeeNotFoundException;
 import com.jet.employeeapi.domain.repository.EmployeeRepository;
 import com.jet.employeeapi.domain.service.EmployeeServiceLive;
 import com.jet.employeeapi.fixture.EmployeeFixture;
-import com.jet.employeeapi.infrastructure.kafka.KafkaProducerService;
+import com.jet.employeeapi.infrastructure.event.Publisher;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,13 +34,13 @@ public class EmployeeServiceLiveTest implements EmployeeFixture {
     private EmployeeRepository employeeRepository;
 
     @Mock
-    private KafkaProducerService producerService;
+    private Publisher publisher;
 
     @Spy
     EmployeeMapper employeeMapper = Mappers.getMapper(EmployeeMapper.class);
 
-    private static final UUID UUID_EMPLOYEE =  UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9");
-    private static final UUID UUID_EMPLOYEE_2 =  UUID.fromString("387b3292-f310-4b00-3e33-9ca96c6854f9");
+    private static final UUID UUID_EMPLOYEE = UUID.fromString("387b3292-f310-4b00-8e33-9ca96c6834f9");
+    private static final UUID UUID_EMPLOYEE_2 = UUID.fromString("387b3292-f310-4b00-3e33-9ca96c6854f9");
 
     @Test
     @SneakyThrows
@@ -64,7 +64,7 @@ public class EmployeeServiceLiveTest implements EmployeeFixture {
         assertThat(response.getBirthDate()).isEqualTo(employeeResponse.getBirthDate());
         assertThat(response.getEmail()).isEqualTo(employeeResponse.getEmail());
         assertThat(response.getHobbies()).containsAll(employeeResponse.getHobbies());
-        verify(producerService, times(1)).sendMessage(anyString());
+        verify(publisher, times(1)).publishEvent(anyString());
     }
 
     @Test
@@ -87,7 +87,7 @@ public class EmployeeServiceLiveTest implements EmployeeFixture {
         var employee = EmployeeFixture.getEmployee("test@gmail.com", "Just Eat",
                 UUID_EMPLOYEE, "1989-06-18", List.of("soccer", "music"));
 
-        var employee2 = EmployeeFixture.getEmployee( "test2@gmail.com", "Just Eat2",
+        var employee2 = EmployeeFixture.getEmployee("test2@gmail.com", "Just Eat2",
                 UUID_EMPLOYEE, "1998-26-11", List.of("soccer", "music"));
 
         doReturn(List.of(employee, employee2)).when(employeeRepository).findAll();
@@ -144,7 +144,7 @@ public class EmployeeServiceLiveTest implements EmployeeFixture {
     @Test
     public void shouldSuccessfullyUpdateEmployee() {
         var employeeRequest = EmployeeFixture.getEmployeeRequest("test@gmail.com", "Lars Ken", "1989-26-09", List.of("soccer", "music"));
-        var employee = EmployeeFixture.getEmployee( "test@gmail.com", "Just Eat",
+        var employee = EmployeeFixture.getEmployee("test@gmail.com", "Just Eat",
                 UUID_EMPLOYEE, "1989-26-09", List.of("soccer", "music"));
 
         when(employeeRepository.findByUuid(UUID_EMPLOYEE)).thenReturn(Optional.ofNullable(employee));
@@ -154,18 +154,18 @@ public class EmployeeServiceLiveTest implements EmployeeFixture {
 
         assertThat(response.getFullName()).isNotEqualTo("Just Eat");
         assertThat(response.getFullName()).isEqualTo("Lars Ken");
-        verify(producerService, times(1)).sendMessage(anyString());
+        verify(publisher, times(1)).publishEvent(anyString());
     }
 
     @Test
     public void shouldDeleteCampaign() {
-        var employee = EmployeeFixture.getEmployee( "test@gmail.com", "Just Eat",
+        var employee = EmployeeFixture.getEmployee("test@gmail.com", "Just Eat",
                 UUID_EMPLOYEE, "1989-26-09", List.of("soccer", "music"));
 
         when(employeeRepository.findByUuid(UUID_EMPLOYEE)).thenReturn(Optional.of(employee));
 
         employeeService.deleteEmployee(UUID_EMPLOYEE);
-        verify(producerService, times(1)).sendMessage(anyString());
+        verify(publisher, times(1)).publishEvent(anyString());
     }
 
     @Test
@@ -173,7 +173,7 @@ public class EmployeeServiceLiveTest implements EmployeeFixture {
         when(employeeRepository.findByUuid(UUID_EMPLOYEE)).thenReturn(Optional.empty());
 
         employeeService.deleteEmployee(UUID_EMPLOYEE);
-        verifyNoInteractions(producerService);
+        verifyNoInteractions(publisher);
     }
 }
 

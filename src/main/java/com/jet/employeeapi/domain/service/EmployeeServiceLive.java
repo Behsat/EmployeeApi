@@ -3,17 +3,15 @@ package com.jet.employeeapi.domain.service;
 import com.jet.employeeapi.api.mapper.EmployeeMapper;
 import com.jet.employeeapi.domain.exception.EmployeeEmailExistsException;
 import com.jet.employeeapi.domain.exception.EmployeeNotFoundException;
-import com.jet.employeeapi.domain.model.Employee;
 import com.jet.employeeapi.domain.model.EmployeeRequest;
 import com.jet.employeeapi.domain.model.EmployeeResponse;
 import com.jet.employeeapi.domain.repository.EmployeeRepository;
-import com.jet.employeeapi.infrastructure.kafka.KafkaProducerService;
+import com.jet.employeeapi.infrastructure.event.Publisher;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -22,7 +20,7 @@ import java.util.stream.Collectors;
 public class EmployeeServiceLive implements EmployeeService {
 
     private final EmployeeRepository repository;
-    private final KafkaProducerService producerService;
+    private final Publisher publisher;
     private final EmployeeMapper mapper;
 
     @Override
@@ -33,7 +31,7 @@ public class EmployeeServiceLive implements EmployeeService {
         var employee = mapper.fromEmployeeRequestToEmployee(request);
         var response = mapper.fromEmployeeToEmployeeResponse(repository.save(employee));
 
-        producerService.sendMessage(String.format("Employee with %s created", response.getEmail()));
+        publisher.publishEvent(String.format("Employee with %s created", response.getEmail()));
         return response;
     }
 
@@ -66,7 +64,7 @@ public class EmployeeServiceLive implements EmployeeService {
                     employee.setFullName(request.getFullName());
                     employee.setHobbies(request.getHobbies());
                     var response = mapper.fromEmployeeToEmployeeResponse(repository.save(employee));
-                    producerService.sendMessage(String.format("Employee with %s updated", response.getEmail()));
+                    publisher.publishEvent(String.format("Employee with %s updated", response.getUuid()));
                     return response;
                 })
                 .orElseThrow(() -> new EmployeeNotFoundException(uuid));
@@ -78,7 +76,7 @@ public class EmployeeServiceLive implements EmployeeService {
 
         maybeEmployee.ifPresent(employee -> {
             repository.deleteByUuid(uuid);
-            producerService.sendMessage(String.format("Employee with %s deleted", uuid));
+            publisher.publishEvent(String.format("Employee with %s deleted", uuid));
         });
     }
 
