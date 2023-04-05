@@ -1,6 +1,6 @@
 # Employee API - Coding Challenge
 
-Employee Api is the domain service for handling process of employess.E.g. 
+Employee Api is the domain service for handling process of employees.E.g. 
 fetching, creation, updating and deletion.
 
 ## Application Metadata
@@ -20,7 +20,7 @@ Application Name: **employee-api**
 
 ### Build 
 
-This is a normal maven project. But before running it, docker-compose file should executed.
+This is a normal maven project. But before running it, docker-compose file should be executed.
 Docker File can be find in here: [Docker-Compose-File][Docker-File]
 
 - Simply execute: `docker-compose up -d`
@@ -50,7 +50,7 @@ Sample postman collection added to project resource path: [Postman-Collection][P
 
 ## Development Information
 
-This project use MongoDB as database storage, Kafka as Message Broker, Swagger as Visualization.
+This project use Mongo DB as database storage, Kafka as Message Broker, Swagger as Visualization.
 
 Spring basic authentication implemented the project and to get response from endpoints authentication required.
 - Usernmae: **user**
