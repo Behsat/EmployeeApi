@@ -6,6 +6,7 @@ spring:
       database: Employees
       username: user
       password: password
+      uri: mongodb://user:password@localhost:27017
 
   kafka:
     consumer:
