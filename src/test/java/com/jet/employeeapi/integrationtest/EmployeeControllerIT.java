@@ -1,5 +1,6 @@
 package com.jet.employeeapi.integrationtest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jet.employeeapi.EmployeeApiApplication;
 import com.jet.employeeapi.domain.model.EmployeeRequest;
 import com.jet.employeeapi.domain.repository.EmployeeRepository;
@@ -36,10 +37,9 @@ public class EmployeeControllerIT implements EmployeeFixture {
 
     @LocalServerPort
     private int port;
-
     TestRestTemplate restTemplate = new TestRestTemplate();
-
     HttpHeaders headers = new HttpHeaders();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @SpyBean
     private EmployeeService employeeService;
@@ -72,28 +72,7 @@ public class EmployeeControllerIT implements EmployeeFixture {
                 createURLWithPort("/api/v1/employee"),
                 HttpMethod.GET, entity, String.class);
 
-        String expected = "[\n" +
-                "  {\n" +
-                "    \"uuid\": \"387b3292-f310-4b00-8e33-9ca96c6834f9\",\n" +
-                "    \"email\": \"test@gmail.com\",\n" +
-                "    \"fullName\": \"Just Eat\",\n" +
-                "    \"birthDate\": \"1989-06-17\",\n" +
-                "    \"hobbies\": [\n" +
-                "      \"soccer\",\n" +
-                "      \"music\"\n" +
-                "    ]\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"uuid\": \"387b3292-f310-4b00-8e33-9ca96c6834f8\",\n" +
-                "    \"email\": \"test2@gmail.com\",\n" +
-                "    \"fullName\": \"Just Eat2\",\n" +
-                "    \"birthDate\": \"2000-02-10\",\n" +
-                "    \"hobbies\": [\n" +
-                "      \"soccer\",\n" +
-                "      \"music\"\n" +
-                "    ]\n" +
-                "  }\n" +
-                "]";
+        String expected = objectMapper.writeValueAsString(List.of(employee,employee2));
 
         JSONAssert.assertEquals(expected, response.getBody(), false);
     }
@@ -112,16 +91,7 @@ public class EmployeeControllerIT implements EmployeeFixture {
                 createURLWithPort("/api/v1/employee/" + UUID_EMPLOYEE),
                 HttpMethod.GET, entity, String.class);
 
-        String expected = "  {\n" +
-                "    \"uuid\": \"387b3292-f310-4b00-8e33-9ca96c6834f9\",\n" +
-                "    \"email\": \"test@gmail.com\",\n" +
-                "    \"fullName\": \"Just Eat\",\n" +
-                "    \"birthDate\": \"1989-06-17\",\n" +
-                "    \"hobbies\": [\n" +
-                "      \"soccer\",\n" +
-                "      \"music\"\n" +
-                "    ]\n" +
-                "  }";
+        String expected = objectMapper.writeValueAsString(employee);
 
         JSONAssert.assertEquals(expected, response.getBody(), false);
     }
