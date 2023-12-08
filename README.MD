@@ -11,7 +11,7 @@ Application Name: **employee-api**
 
 ### Prerequisites
 
-- Java 11
+- Java 17
 - Apache Maven
 
 ### Dependencies
